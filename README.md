@@ -1,93 +1,79 @@
 # Student Onboarding & Records Portal
 
-A small React + TypeScript web app where **parents** complete a multi-step
-form to enroll a student, and a **school admin** reviews submissions and
-approves or rejects them. Built to mirror tools like GradeLink.
+A web application for managing student enrollment at a school. Parents complete
+a guided, multi-step form to enroll a student; school administrators review each
+submission and approve or reject it. Inspired by school-information systems such
+as GradeLink.
 
-Built with: **React 18 · TypeScript · Vite**. No backend — submissions are
-saved in the browser via `localStorage`, so they survive a page refresh.
+## Features
 
----
+- **Multi-step enrollment form** — guardian details, student details, and
+  emergency/medical information, collected across four steps with a progress
+  indicator and per-step validation.
+- **Role-based views** — a parent view for submitting applications and an
+  administrator view for reviewing them.
+- **Application workflow** — each record moves through `submitted → approved`
+  or `rejected`.
+- **Admin dashboard** — summary counts (total, pending, approved, rejected),
+  search by student or guardian name, and filtering by status.
+- **Expandable detail rows** — view a submission's full information inline.
+- **Local persistence** — submissions are stored in the browser via
+  `localStorage`, so they survive a page refresh.
 
-## Run it locally
+## Tech stack
 
-You need Node.js (v18+). Then:
+- React 18
+- TypeScript
+- Vite
 
-```bash
-npm install      # download dependencies (one time)
-npm run dev      # start the dev server, open the URL it prints (usually http://localhost:5173)
-```
+## Getting started
 
-Other commands:
-```bash
-npm run build      # production build into dist/
-npm run typecheck  # check types without building
-```
-
----
-
-## How it works (read in this order)
-
-Think of the app as a tree of components. Data lives near the top and flows
-**down** as props; events flow **up** through callback functions.
-
-1. **`src/types.ts`** — the shape of the data. `StudentRecord` is everything
-   one parent enters about one child, plus a `status`
-   (`draft → submitted → approved/rejected`). Defining it once means every
-   file agrees and the compiler catches mistakes.
-
-2. **`src/storage.ts`** — `loadRecords()` / `saveRecords()` read and write
-   `localStorage`. Keeping this in one file means no component touches storage
-   directly; they just call these two functions.
-
-3. **`src/App.tsx`** — the top-level component. It owns two pieces of state:
-   the current `role` (parent vs admin) and the list of `records`. A
-   `useEffect` saves records whenever they change. It renders the form for
-   parents and the table for admins.
-
-4. **`src/components/OnboardingForm.tsx`** — the multi-step form. It keeps the
-   in-progress record in state, validates the current step before letting you
-   advance (`next()`), and calls `onSubmit` on the final step. The `set()`
-   helper updates one field at a time in a type-safe way.
-
-5. **`src/components/validation.ts`** — pure functions that return which
-   fields are invalid for a given step. Kept separate so it's easy to read and
-   reuse.
-
-6. **`src/components/Field.tsx`** — one reusable labeled input with an error
-   message. Used on every step so all fields behave the same — this is the
-   "reusable, composable component" idea.
-
-7. **`src/components/AdminView.tsx`** — the admin table. Shows each submission
-   with a status badge and Approve/Reject buttons that call back up to `App`.
-
-8. **`src/index.css`** — all the styling. Plain CSS with a few variables.
-
-### The two concepts worth understanding for an interview
-- **Lifting state up:** `App` owns the records; children receive data and send
-  changes back via callbacks (`onSubmit`, `onSetStatus`). This is the core
-  React data-flow pattern.
-- **Controlled inputs:** every input's value comes from state and every
-  keystroke updates state via `onChange`. React is the single source of truth.
-
----
-
-## Push it to GitHub
+Requires Node.js 18 or newer.
 
 ```bash
-git init
-git add .
-git commit -m "Student onboarding & records portal"
-git branch -M main
-git remote add origin https://github.com/AadilKak/student-onboarding-portal.git
-git push -u origin main
+npm install
+npm run dev      # start the dev server (http://localhost:5173)
 ```
-(Create the empty repo on GitHub first, named `student-onboarding-portal`.)
 
----
+Additional scripts:
 
-## Ideas to extend it (good talking points)
-- Edit an existing submission instead of only creating new ones.
-- Search/filter the admin table by status or grade.
-- Swap `localStorage` for a real API (e.g. a small Flask backend — on Ramp's stack).
-- Add unit tests for `validation.ts`.
+```bash
+npm run build      # production build
+npm run preview    # serve the production build locally
+npm run typecheck  # type-check without emitting
+```
+
+> Note: avoid running `npm install` inside a cloud-synced folder
+> (OneDrive, Dropbox, etc.). Sync clients lock files while `node_modules`
+> is being written, which causes install errors. Keep the project in a
+> local, non-synced directory.
+
+## Project structure
+
+```
+src/
+  App.tsx                  Top-level component; owns records and current role
+  types.ts                 Shared data types (StudentRecord, Status, Role)
+  storage.ts               localStorage read/write helpers
+  index.css                Styles
+  components/
+    OnboardingForm.tsx     Multi-step parent enrollment form
+    Field.tsx              Reusable labeled input with error display
+    validation.ts          Per-step validation rules
+    AdminView.tsx          Admin dashboard, table, and review actions
+```
+
+## Architecture notes
+
+State is owned by `App` and passed down to child components as props; child
+components report changes back through callback props (`onSubmit`,
+`onSetStatus`, `onDelete`). All form inputs are controlled, with React state as
+the single source of truth. The persistence layer is isolated in `storage.ts`
+so components never access `localStorage` directly.
+
+## Possible extensions
+
+- Edit existing submissions in addition to creating new ones.
+- Replace `localStorage` with a backend API and database.
+- Add automated tests for the validation logic.
+- Add authentication for real parent and administrator accounts.

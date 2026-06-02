@@ -1,0 +1,26 @@
+# Render Blueprint: Flask API + managed Postgres. Push this repo, then in
+# Render choose "New > Blueprint" and point it at the repo.
+services:
+  - type: web
+    name: sis-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: JWT_SECRET_KEY
+        generateValue: true        # Render creates a strong secret
+      - key: SEED_DEMO
+        value: "1"                 # populate demo data on first boot
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sis-db
+          property: connectionString
+      # Optional: lock CORS to your Vercel URL once you have it
+      # - key: FRONTEND_ORIGIN
+      #   value: https://your-app.vercel.app
+
+databases:
+  - name: sis-db
+    plan: free

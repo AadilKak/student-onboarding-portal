@@ -1,0 +1,32 @@
+"""Demo seed data. Runs only when SEED_DEMO=1 and the database is empty, so a
+freshly deployed instance shows a populated school instead of a blank app."""
+from .extensions import db
+from .models import User, Student
+
+DEMO_ADMIN = ("admin@demo.school", "Demo1234!")
+DEMO_PARENT = ("parent@demo.school", "Demo1234!")
+
+
+def _student(first, last, dob, grade, status, guardian_email, guardian_name):
+    return Student(
+        status=status, guardian_email=guardian_email, guardian_name=guardian_name,
+        student_first_name=first, student_last_name=last, date_of_birth=dob, grade_level=grade,
+    )
+
+
+def seed_demo():
+    if User.query.first():
+        return  # already seeded / has data
+
+    admin = User(email=DEMO_ADMIN[0], role="admin"); admin.set_password(DEMO_ADMIN[1])
+    parent = User(email=DEMO_PARENT[0], role="parent"); parent.set_password(DEMO_PARENT[1])
+    db.session.add_all([admin, parent])
+
+    db.session.add_all([
+        _student("Ikhlas", "Ali", "2020-10-25", "Pre-Kindergarten", "approved", DEMO_PARENT[0], "Fartun Korane"),
+        _student("Yusuf", "Ali", "2018-03-14", "1", "submitted", DEMO_PARENT[0], "Fartun Korane"),
+        _student("Amina", "Hassan", "2017-06-02", "2", "approved", "other@demo.school", "Hassan Omar"),
+        _student("Bilal", "Noor", "2016-09-19", "3", "approved", "noor@demo.school", "Noor Aden"),
+        _student("Sara", "Yusuf", "2019-12-01", "Kindergarten", "submitted", "yusuf@demo.school", "Yusuf Abdi"),
+    ])
+    db.session.commit()

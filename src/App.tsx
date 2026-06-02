@@ -1,44 +1,106 @@
-// Top-level component. Owns the list of records and the current role,
-// loads/saves to storage, and switches between the Parent form and the
-// Admin table based on the selected role.
-import { useEffect, useState } from "react";
+// Top-level component. Owns the current role, the active view within that
+// role, and the list of student records (loaded from the data layer).
+// All data access goes through src/api/repository — never localStorage directly.
+import { useEffect, useState, useCallback } from "react";
 import type { StudentRecord, Role, Status } from "./types";
-import { loadRecords, saveRecords } from "./storage";
-import OnboardingForm from "./components/OnboardingForm";
+import * as api from "./api/repository";
+import EnrollmentWizard from "./enroll/EnrollmentWizard";
 import AdminView from "./components/AdminView";
+import Roster from "./components/Roster";
+import ParentPortal from "./components/ParentPortal";
+import AuthPage from "./auth/AuthPage";
+
+// Which views each role can navigate between.
+const VIEWS: Record<Role, { id: string; label: string }[]> = {
+  admin: [
+    { id: "applications", label: "Applications" },
+    { id: "roster", label: "Roster" },
+  ],
+  teacher: [{ id: "roster", label: "Roster" }],
+  parent: [
+    { id: "enroll", label: "Enroll a Student" },
+    { id: "portal", label: "My Students" },
+  ],
+};
 
 export default function App() {
   const [role, setRole] = useState<Role>("parent");
-  const [records, setRecords] = useState<StudentRecord[]>(() => loadRecords());
+  const [view, setView] = useState<string>("enroll");
+  const [records, setRecords] = useState<StudentRecord[]>([]);
+  const [session, setSession] = useState<string | null>(null); // logged-in email, null = signed out
 
-  // Whenever records change, persist them. The effect runs after render.
-  useEffect(() => { saveRecords(records); }, [records]);
+  // Load records from the data layer on mount.
+  const refresh = useCallback(async () => {
+    setRecords(await api.listStudents());
+  }, []);
+  useEffect(() => { if (session) void refresh(); }, [session, refresh]);
 
-  function addRecord(record: StudentRecord) {
-    setRecords((prev) => [record, ...prev]);
-    setRole("admin"); // jump to admin so you can see it land
+  // When the role changes, jump to that role's first view.
+  function switchRole(next: Role) {
+    setRole(next);
+    setView(VIEWS[next][0].id);
   }
-  function setStatus(id: string, status: Status) {
-    setRecords((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+
+  async function addApplication(record: StudentRecord) {
+    const r = await api.createApplication(record);
+    if (!r.ok) { alert(r.error); return; }
+    await refresh();
+    setView("portal"); // show the parent their submission in their portal
+  }
+  async function setStatus(id: string, status: Status) {
+    const r = await api.setStatus(id, status);
+    if (!r.ok) alert(r.error);
+    await refresh();
+  }
+  async function remove(id: string) { await api.deleteStudent(id); await refresh(); }
+  async function save(updated: StudentRecord) { await api.updateStudent(updated); await refresh(); }
+  async function createStudent(record: StudentRecord) {
+    const r = await api.createStudent(record);
+    if (!r.ok) alert(r.error);
+    await refresh();
+  }
+
+  // Derived lists.
+  const applications = records.filter((r) => r.status !== "approved");
+  const enrolled = records.filter((r) => r.status === "approved");
+
+  if (!session) {
+    return <AuthPage onAuthenticated={(email) => { setSession(email); switchRole("parent"); }} />;
   }
 
   return (
     <div className="app">
       <header className="header">
         <div>
-          <h1>Maplewood School · Onboarding Portal</h1>
-          <p className="subtitle">Enroll a student and track application status</p>
+          <h1>Maplewood School · Information System</h1>
+          <p className="subtitle">Enrollment, student records, and family portal</p>
         </div>
-        {/* Role switcher — stands in for real authentication */}
         <div className="role-switch">
-          <button className={role === "parent" ? "pill pill--active" : "pill"} onClick={() => setRole("parent")}>Parent</button>
-          <button className={role === "admin" ? "pill pill--active" : "pill"} onClick={() => setRole("admin")}>School Admin</button>
+          <span className="acct">{session}</span>
+          {(["admin", "teacher", "parent"] as Role[]).map((r) => (
+            <button key={r} className={role === r ? "pill pill--active" : "pill"} onClick={() => switchRole(r)}>
+              {r[0].toUpperCase() + r.slice(1)}
+            </button>
+          ))}
+          <button className="pill" onClick={() => { api.clearToken(); setSession(null); }}>Sign out</button>
         </div>
       </header>
 
-      {role === "parent"
-        ? <OnboardingForm onSubmit={addRecord} />
-        : <AdminView records={records} onSetStatus={setStatus} />}
+      <nav className="tabs">
+        {VIEWS[role].map((v) => (
+          <button key={v.id} className={view === v.id ? "tab tab--active" : "tab"} onClick={() => setView(v.id)}>
+            {v.label}
+          </button>
+        ))}
+      </nav>
+
+      {role === "parent" && view === "enroll" && <EnrollmentWizard onSubmit={addApplication} />}
+      {role === "parent" && view === "portal" && <ParentPortal lookup={api.listByGuardianEmail} />}
+      {role === "admin" && view === "applications" && (
+        <AdminView records={applications} onSetStatus={setStatus} onDelete={remove} onSave={save} />
+      )}
+      {role === "admin" && view === "roster" && <Roster students={enrolled} onSave={save} onCreate={createStudent} onDelete={remove} />}
+      {role === "teacher" && view === "roster" && <Roster students={enrolled} onSave={save} readOnly />}
     </div>
   );
 }
