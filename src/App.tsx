@@ -86,7 +86,7 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div>
-          <h1>Maplewood School · Information System</h1>
+          <h1>Al-Huda School · Information System</h1>
           <p className="subtitle">Enrollment, student records, and family portal</p>
         </div>
         <div className="role-switch">

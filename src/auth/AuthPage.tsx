@@ -13,10 +13,10 @@ interface Props {
 
 // School details — edit these for a different school.
 const SCHOOL = {
-  name: "Maplewood School",
+  name: "Al-Huda School",
   address: "1007 Rana Villa Ave, Camp Hill, PA 17011",
   phone: "(717) 737-5395",
-  website: "www.maplewood.org",
+  website: "www.alhudapa.org",
 };
 
 export default function AuthPage({ onAuthenticated }: Props) {

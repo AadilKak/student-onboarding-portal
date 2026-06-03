@@ -1,7 +1,7 @@
 // Data layer — now backed by the Flask API instead of localStorage.
 // Because every component calls these functions (never `fetch` directly),
 // this is the ONLY file that changed when we moved to the real backend.
-import type { StudentRecord, Status, Role } from "../types";
+import type { StudentRecord, Status, Role } from "./types";
 
 // Where the API lives. Override at build time with VITE_API_URL if needed.
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:5000";

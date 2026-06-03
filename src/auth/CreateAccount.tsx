@@ -34,7 +34,7 @@ export default function CreateAccount({ onRegister }: Props) {
 
   return (
     <div className="auth-card">
-      <h2 className="auth-title">Welcome to the online enrollment site for Maplewood School</h2>
+      <h2 className="auth-title">Welcome to the online enrollment site for Al-Huda School</h2>
       <p className="auth-sub">If this is your first time here, you will need to register using your email address</p>
 
       <div className="auth-grid">
