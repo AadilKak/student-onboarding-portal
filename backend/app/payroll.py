@@ -42,21 +42,26 @@ def payroll():
             .filter(TimeEntry.clock_out.isnot(None))
             .all())
 
-    # Per user: { (iso_year, iso_week): hours }
+    # Per user: { (iso_year, iso_week): approved_hours }, plus unapproved hours.
     per_user = {}
+    unapproved = {}
     meta = {}
     for entry, user in rows:
         d = entry.clock_in.date()
         if d < start or d > end:
             continue
         hrs = (entry.clock_out - entry.clock_in).total_seconds() / 3600.0
-        wk = entry.clock_in.isocalendar()[:2]  # (year, week)
+        meta[user.id] = user
+        if not entry.approved:
+            unapproved[user.id] = unapproved.get(user.id, 0.0) + hrs
+            continue
+        wk = entry.clock_in.isocalendar()[:2]
         per_user.setdefault(user.id, {})
         per_user[user.id][wk] = per_user[user.id].get(wk, 0.0) + hrs
-        meta[user.id] = user
 
     result = []
-    for uid, weeks in per_user.items():
+    for uid in meta:
+        weeks = per_user.get(uid, {})
         regular = sum(min(h, 40.0) for h in weeks.values())
         overtime = sum(max(h - 40.0, 0.0) for h in weeks.values())
         rate = meta[uid].hourly_rate or 0.0
@@ -64,10 +69,12 @@ def payroll():
         result.append({
             "userId": uid,
             "email": meta[uid].email,
+            "name": meta[uid].full_name,
             "role": meta[uid].role,
             "hourlyRate": rate,
             "regularHours": round(regular, 2),
             "overtimeHours": round(overtime, 2),
+            "unapprovedHours": round(unapproved.get(uid, 0.0), 2),
             "grossPay": round(gross, 2),
         })
     result.sort(key=lambda r: r["email"])

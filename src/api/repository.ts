@@ -35,11 +35,11 @@ function authHeaders(json = false): HeadersInit {
 // ===== Auth =====
 export interface AuthResult { ok: boolean; error?: string; role?: Role; }
 
-export async function registerUser(email: string, password: string): Promise<AuthResult> {
+export async function registerUser(email: string, password: string, name = ""): Promise<AuthResult> {
   try {
     const res = await fetch(`${API}/auth/register`, {
       method: "POST", headers: authHeaders(true),
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, name }),
     });
     const data = await res.json();
     if (!res.ok) return { ok: false, error: data.error ?? "Could not create account." };
@@ -170,7 +170,7 @@ export async function downloadFile(fileId: string, filename: string): Promise<vo
 }
 
 // ===== User management (admin only) =====
-export interface UserRow { id: string; email: string; role: Role; hourlyRate: number; isOwner: boolean; }
+export interface UserRow { id: string; email: string; name: string; role: Role; hourlyRate: number; isOwner: boolean; }
 
 export async function listUsers(): Promise<UserRow[]> {
   try {
@@ -190,7 +190,17 @@ export async function setUserRate(id: string, hourlyRate: number): Promise<AuthR
   } catch { return { ok: false, error: "Cannot reach the server." }; }
 }
 
-export interface PayrollRow { userId: string; email: string; role: Role; hourlyRate: number; regularHours: number; overtimeHours: number; grossPay: number; }
+export async function setUserName(id: string, name: string): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/users/${id}/name`, {
+      method: "PATCH", headers: authHeaders(true), body: JSON.stringify({ name }),
+    });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not update name." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
+export interface PayrollRow { userId: string; email: string; name: string; role: Role; hourlyRate: number; regularHours: number; overtimeHours: number; unapprovedHours: number; grossPay: number; }
 export interface PayrollResult { start: string; end: string; rows: PayrollRow[]; }
 
 export async function getPayroll(start: string, end: string): Promise<PayrollResult> {
@@ -212,7 +222,7 @@ export async function setUserRole(id: string, role: Role): Promise<AuthResult> {
 }
 
 // ===== Time clock =====
-export interface TimeEntryRow { id: string; userId: string; email: string | null; clockIn: string | null; clockOut: string | null; open: boolean; }
+export interface TimeEntryRow { id: string; userId: string; email: string | null; name: string | null; clockIn: string | null; clockOut: string | null; open: boolean; approved: boolean; flag: string | null; }
 
 export async function clockIn(): Promise<AuthResult> {
   try {
@@ -241,6 +251,31 @@ export async function myTimeEntries(): Promise<TimeEntryRow[]> {
 export async function allTimeEntries(): Promise<TimeEntryRow[]> {
   try {
     const res = await fetch(`${API}/time/entries`, { headers: authHeaders() });
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
+
+
+// ===== Time-entry admin controls =====
+export interface AuditRow { id: string; actor: string; action: string; detail: string; at: string; }
+
+export async function approveEntry(id: string, approved: boolean): Promise<void> {
+  await fetch(`${API}/time/entries/${id}/approve`, {
+    method: "PATCH", headers: authHeaders(true), body: JSON.stringify({ approved }),
+  });
+}
+export async function approveAllForUser(userId: string): Promise<void> {
+  await fetch(`${API}/time/approve-all`, {
+    method: "POST", headers: authHeaders(true), body: JSON.stringify({ userId }),
+  });
+}
+export async function deleteTimeEntry(id: string): Promise<void> {
+  await fetch(`${API}/time/entries/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+export async function getAudit(): Promise<AuditRow[]> {
+  try {
+    const res = await fetch(`${API}/audit`, { headers: authHeaders() });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }

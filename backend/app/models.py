@@ -13,6 +13,17 @@ def _uuid() -> str:
     return str(uuid.uuid4())
 
 
+def _utc_iso(dt):
+    """Return an ISO string that is explicitly UTC. SQLite returns naive
+    datetimes, so we re-attach UTC; otherwise browsers treat the UTC value as
+    local time and the clock shows the wrong hour."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.String, primary_key=True, default=_uuid)
@@ -21,6 +32,7 @@ class User(db.Model):
     role = db.Column(db.String, nullable=False, default="parent")  # admin/teacher/parent/staff
     hourly_rate = db.Column(db.Float, nullable=False, default=0.0)
     is_owner = db.Column(db.Boolean, nullable=False, default=False)
+    full_name = db.Column(db.String, nullable=False, default="")
 
     # Password handling lives on the server. Werkzeug uses a salted PBKDF2 hash.
     def set_password(self, raw: str) -> None:
@@ -30,7 +42,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, raw)
 
     def to_dict(self) -> dict:
-        return {"id": self.id, "email": self.email, "role": self.role, "hourlyRate": self.hourly_rate, "isOwner": self.is_owner}
+        return {"id": self.id, "email": self.email, "name": self.full_name, "role": self.role, "hourlyRate": self.hourly_rate, "isOwner": self.is_owner}
 
 
 class Student(db.Model):
@@ -59,7 +71,7 @@ class Student(db.Model):
         return {
             "id": self.id,
             "status": self.status,
-            "submittedAt": self.submitted_at.isoformat() if self.submitted_at else "",
+            "submittedAt": _utc_iso(self.submitted_at) or "",
             "guardianName": self.guardian_name,
             "guardianEmail": self.guardian_email,
             "guardianPhone": self.guardian_phone,
@@ -107,7 +119,7 @@ class Attachment(db.Model):
             "filename": self.filename,
             "contentType": self.content_type,
             "size": self.size,
-            "uploadedAt": self.uploaded_at.isoformat() if self.uploaded_at else "",
+            "uploadedAt": _utc_iso(self.uploaded_at) or "",
         }
 
 
@@ -117,13 +129,40 @@ class TimeEntry(db.Model):
     user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False, index=True)
     clock_in = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     clock_out = db.Column(db.DateTime, nullable=True)
+    approved = db.Column(db.Boolean, nullable=False, default=False)
 
-    def to_dict(self, email=None) -> dict:
+    def to_dict(self, email=None, name=None) -> dict:
         return {
             "id": self.id,
             "userId": self.user_id,
             "email": email,
-            "clockIn": self.clock_in.isoformat() if self.clock_in else None,
-            "clockOut": self.clock_out.isoformat() if self.clock_out else None,
+            "name": name,
+            "clockIn": _utc_iso(self.clock_in),
+            "clockOut": _utc_iso(self.clock_out),
             "open": self.clock_out is None,
+            "approved": self.approved,
+            "flag": self._flag(),
         }
+
+    def _flag(self):
+        if self.clock_out is None:
+            return None
+        hrs = (self.clock_out - self.clock_in).total_seconds() / 3600.0
+        if hrs < 0.0833:   # under ~5 minutes
+            return "short"
+        if hrs > 12:       # likely a missed clock-out
+            return "long"
+        return None
+
+
+class AuditLog(db.Model):
+    __tablename__ = "audit_log"
+    id = db.Column(db.String, primary_key=True, default=_uuid)
+    actor = db.Column(db.String, default="")      # who did it (email)
+    action = db.Column(db.String, default="")     # e.g. approve, delete, edit
+    detail = db.Column(db.String, default="")
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {"id": self.id, "actor": self.actor, "action": self.action,
+                "detail": self.detail, "at": _utc_iso(self.created)}

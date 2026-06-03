@@ -32,7 +32,7 @@ with app.app_context():
             d = today - timedelta(days=days_ago)
             ci = datetime(d.year, d.month, d.day, 8, 0, tzinfo=timezone.utc)
             co = ci + timedelta(hours=hrs)
-            db.session.add(TimeEntry(user_id=user.id, clock_in=ci, clock_out=co))
+            db.session.add(TimeEntry(user_id=user.id, clock_in=ci, clock_out=co, approved=True))
             total += hrs
         print(f"  {email}: {len(shifts)} shifts, {total:.0f} hours")
     db.session.commit()

@@ -201,6 +201,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* payroll totals + print */
 .total-row td{border-top:2px solid var(--ink)}
 @media print {
-  .no-print, .tabs, .header, .role-switch { display:none !important; }
-  .app { max-width:none; }
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+  .no-print { display: none !important; }
 }

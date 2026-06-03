@@ -19,6 +19,7 @@ def register():
         return jsonify(error="An account with that email already exists"), 409
 
     user = User(email=email, role=data.get("role", "parent"))
+    user.full_name = (data.get("name") or "").strip()
     user.set_password(password)
     db.session.add(user)
     db.session.commit()

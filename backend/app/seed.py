@@ -25,9 +25,11 @@ def seed_demo():
         (DEMO_TEACHER, "teacher"), (DEMO_STAFF, "staff"),
     ]
     rates = {"staff": 18.0, "teacher": 25.0}
+    names = {"admin": "Sarah Owner", "parent": "Fartun Korane", "teacher": "James Carter", "staff": "Maria Lopez"}
     for (email, pw), role in accounts:
         u = User(email=email, role=role); u.set_password(pw)
         u.hourly_rate = rates.get(role, 0.0)
+        u.full_name = names.get(role, "")
         if role == "admin":
             u.is_owner = True
         db.session.add(u)

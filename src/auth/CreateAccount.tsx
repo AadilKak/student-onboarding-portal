@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function CreateAccount({ onRegister }: Props) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -26,7 +27,7 @@ export default function CreateAccount({ onRegister }: Props) {
   async function submit() {
     setTouched(true);
     if (!canSubmit) return;
-    const res = await api.registerUser(email, password);
+    const res = await api.registerUser(email, password, fullName);
     if (res.ok) onRegister(email, res.role ?? "parent");
     else setError(res.error ?? "Could not create account.");
   }
@@ -39,6 +40,9 @@ export default function CreateAccount({ onRegister }: Props) {
       <div className="auth-grid">
         {/* Left: the form */}
         <div className="auth-form">
+          <label className="auth-label">Full Name</label>
+          <input className="auth-input" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+
           <label className="auth-label">Email Address</label>
           <input className="auth-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           {touched && !emailValid && <span className="auth-err">Enter a valid email</span>}

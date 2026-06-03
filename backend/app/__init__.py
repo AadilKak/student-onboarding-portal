@@ -62,3 +62,11 @@ def _ensure_columns():
         if "is_owner" not in ucols:
             db.session.execute(text("ALTER TABLE users ADD COLUMN is_owner BOOLEAN DEFAULT 0"))
             db.session.commit()
+        if "full_name" not in ucols:
+            db.session.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR DEFAULT ''"))
+            db.session.commit()
+    if "time_entries" in inspector.get_table_names():
+        tcols = {c["name"] for c in inspector.get_columns("time_entries")}
+        if "approved" not in tcols:
+            db.session.execute(text("ALTER TABLE time_entries ADD COLUMN approved BOOLEAN DEFAULT 0"))
+            db.session.commit()

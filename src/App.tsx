@@ -12,6 +12,7 @@ import Users from "./components/Users";
 import TimeClock from "./components/TimeClock";
 import TimeEntriesAdmin from "./components/TimeEntriesAdmin";
 import Payroll from "./components/Payroll";
+import Audit from "./components/Audit";
 import AuthPage from "./auth/AuthPage";
 
 // Which views each role can navigate between.
@@ -22,6 +23,7 @@ const VIEWS: Record<Role, { id: string; label: string }[]> = {
     { id: "users", label: "Users" },
     { id: "time", label: "Time Entries" },
     { id: "payroll", label: "Payroll" },
+    { id: "audit", label: "Audit" },
     { id: "timeclock", label: "Time Clock" },
   ],
   teacher: [
@@ -112,6 +114,7 @@ export default function App() {
       {role === "admin" && view === "users" && <Users />}
       {role === "admin" && view === "time" && <TimeEntriesAdmin />}
       {role === "admin" && view === "payroll" && <Payroll />}
+      {role === "admin" && view === "audit" && <Audit />}
       {role === "staff" && view === "timeclock" && <TimeClock />}
       {role === "teacher" && view === "timeclock" && <TimeClock />}
       {role === "admin" && view === "timeclock" && <TimeClock />}

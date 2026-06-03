@@ -64,3 +64,17 @@ def set_rate(uid):
     user.hourly_rate = rate
     db.session.commit()
     return jsonify(user.to_dict())
+
+
+@bp.patch("/users/<uid>/name")
+@jwt_required()
+def set_name(uid):
+    if not _is_admin():
+        return jsonify(error="Admins only"), 403
+    name = (request.get_json(silent=True) or {}).get("name", "")
+    user = db.session.get(User, uid)
+    if not user:
+        return jsonify(error="Not found"), 404
+    user.full_name = str(name).strip()
+    db.session.commit()
+    return jsonify(user.to_dict())
