@@ -9,6 +9,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"            # psycopg2 has no Python 3.14 wheel yet
       - key: JWT_SECRET_KEY
         generateValue: true        # Render creates a strong secret
       - key: SEED_DEMO
