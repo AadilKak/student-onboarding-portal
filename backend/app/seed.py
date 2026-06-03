@@ -5,6 +5,8 @@ from .models import User, Student
 
 DEMO_ADMIN = ("admin@demo.school", "Demo1234!")
 DEMO_PARENT = ("parent@demo.school", "Demo1234!")
+DEMO_TEACHER = ("teacher@demo.school", "Demo1234!")
+DEMO_STAFF = ("staff@demo.school", "Demo1234!")
 
 
 def _student(first, last, dob, grade, status, guardian_email, guardian_name):
@@ -18,9 +20,17 @@ def seed_demo():
     if User.query.first():
         return  # already seeded / has data
 
-    admin = User(email=DEMO_ADMIN[0], role="admin"); admin.set_password(DEMO_ADMIN[1])
-    parent = User(email=DEMO_PARENT[0], role="parent"); parent.set_password(DEMO_PARENT[1])
-    db.session.add_all([admin, parent])
+    accounts = [
+        (DEMO_ADMIN, "admin"), (DEMO_PARENT, "parent"),
+        (DEMO_TEACHER, "teacher"), (DEMO_STAFF, "staff"),
+    ]
+    rates = {"staff": 18.0, "teacher": 25.0}
+    for (email, pw), role in accounts:
+        u = User(email=email, role=role); u.set_password(pw)
+        u.hourly_rate = rates.get(role, 0.0)
+        if role == "admin":
+            u.is_owner = True
+        db.session.add(u)
 
     db.session.add_all([
         _student("Ikhlas", "Ali", "2020-10-25", "Pre-Kindergarten", "approved", DEMO_PARENT[0], "Fartun Korane"),

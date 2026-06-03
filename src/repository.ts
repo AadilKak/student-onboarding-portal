@@ -16,11 +16,6 @@ function setToken(t: string): void {
 }
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem("isOwner");
-}
-
-export function isOwner(): boolean {
-  return localStorage.getItem("isOwner") === "1";
 }
 
 // Build headers, attaching the bearer token when we have one.
@@ -44,7 +39,6 @@ export async function registerUser(email: string, password: string): Promise<Aut
     const data = await res.json();
     if (!res.ok) return { ok: false, error: data.error ?? "Could not create account." };
     setToken(data.token);
-    localStorage.setItem("isOwner", data.isOwner ? "1" : "0");
     return { ok: true, role: data.role as Role };
   } catch {
     return { ok: false, error: "Cannot reach the server. Is the backend running?" };
@@ -170,7 +164,7 @@ export async function downloadFile(fileId: string, filename: string): Promise<vo
 }
 
 // ===== User management (admin only) =====
-export interface UserRow { id: string; email: string; role: Role; hourlyRate: number; isOwner: boolean; }
+export interface UserRow { id: string; email: string; role: Role; hourlyRate: number; }
 
 export async function listUsers(): Promise<UserRow[]> {
   try {

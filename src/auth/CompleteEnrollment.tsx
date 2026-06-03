@@ -5,7 +5,7 @@ import * as api from "../api/repository";
 
 interface Props {
   schoolName: string;
-  onLogin: (email: string) => void;
+  onLogin: (email: string, role: string) => void;
 }
 
 export default function CompleteEnrollment({ schoolName, onLogin }: Props) {
@@ -22,7 +22,7 @@ export default function CompleteEnrollment({ schoolName, onLogin }: Props) {
     setTouched(true);
     if (!canSubmit) return;
     const res = await api.loginUser(email, password);
-    if (res.ok) onLogin(email);
+    if (res.ok) onLogin(email, res.role ?? "parent");
     else setError(res.error ?? "Login failed.");
   }
 
@@ -50,9 +50,14 @@ export default function CompleteEnrollment({ schoolName, onLogin }: Props) {
           <button className="btn btn--primary auth-pill-btn" onClick={submit} disabled={!canSubmit}>Login</button>
         </div>
         <div className="auth-demo">
-          <button type="button" className="linklike" onClick={() => { setEmail("admin@demo.school"); setPassword("Demo1234!"); }}>Use demo admin</button>
+          Quick test login:
+          <button type="button" className="linklike" onClick={() => { setEmail("admin@demo.school"); setPassword("Demo1234!"); }}>admin</button>
           <span> · </span>
-          <button type="button" className="linklike" onClick={() => { setEmail("parent@demo.school"); setPassword("Demo1234!"); }}>Use demo parent</button>
+          <button type="button" className="linklike" onClick={() => { setEmail("teacher@demo.school"); setPassword("Demo1234!"); }}>teacher</button>
+          <span> · </span>
+          <button type="button" className="linklike" onClick={() => { setEmail("staff@demo.school"); setPassword("Demo1234!"); }}>staff</button>
+          <span> · </span>
+          <button type="button" className="linklike" onClick={() => { setEmail("parent@demo.school"); setPassword("Demo1234!"); }}>parent</button>
         </div>
       </div>
     </div>

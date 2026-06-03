@@ -6,7 +6,7 @@ import Requirement from "./Requirement";
 import * as api from "../api/repository";
 
 interface Props {
-  onRegister: (email: string) => void;
+  onRegister: (email: string, role: string) => void;
 }
 
 export default function CreateAccount({ onRegister }: Props) {
@@ -27,7 +27,7 @@ export default function CreateAccount({ onRegister }: Props) {
     setTouched(true);
     if (!canSubmit) return;
     const res = await api.registerUser(email, password);
-    if (res.ok) onRegister(email);
+    if (res.ok) onRegister(email, res.role ?? "parent");
     else setError(res.error ?? "Could not create account.");
   }
 

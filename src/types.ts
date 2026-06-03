@@ -5,7 +5,7 @@ import type { EnrollmentDetails } from "./enroll/model";
 export type Status = "draft" | "submitted" | "approved" | "rejected";
 
 // Three real user roles the app serves.
-export type Role = "admin" | "teacher" | "parent";
+export type Role = "admin" | "teacher" | "parent" | "staff";
 
 export interface StudentRecord {
   id: string;

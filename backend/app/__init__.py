@@ -20,9 +20,15 @@ def create_app(config_class=Config):
     from .auth import bp as auth_bp
     from .students import bp as students_bp
     from .files import bp as files_bp
+    from .users import bp as users_bp
+    from .timeclock import bp as timeclock_bp
+    from .payroll import bp as payroll_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(students_bp)
     app.register_blueprint(files_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(timeclock_bp)
+    app.register_blueprint(payroll_bp)
 
     with app.app_context():
         db.create_all()
@@ -47,4 +53,12 @@ def _ensure_columns():
         cols = {c["name"] for c in inspector.get_columns("students")}
         if "details" not in cols:
             db.session.execute(text("ALTER TABLE students ADD COLUMN details TEXT DEFAULT '{}'"))
+            db.session.commit()
+    if "users" in inspector.get_table_names():
+        ucols = {c["name"] for c in inspector.get_columns("users")}
+        if "hourly_rate" not in ucols:
+            db.session.execute(text("ALTER TABLE users ADD COLUMN hourly_rate FLOAT DEFAULT 0"))
+            db.session.commit()
+        if "is_owner" not in ucols:
+            db.session.execute(text("ALTER TABLE users ADD COLUMN is_owner BOOLEAN DEFAULT 0"))
             db.session.commit()

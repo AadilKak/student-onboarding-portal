@@ -19,6 +19,10 @@ bp = Blueprint("students", __name__)
 VALID_STATUS = {"submitted", "approved", "rejected"}
 
 
+def _role():
+    return (get_jwt() or {}).get("role")
+
+
 def _duplicate_exists(first, last, dob, statuses, exclude_id=None):
     """True if another student with the same name + DOB exists in any of the
     given statuses. Skips the check when name fields are empty."""
@@ -40,6 +44,8 @@ def _duplicate_exists(first, last, dob, statuses, exclude_id=None):
 @bp.get("/students")
 @jwt_required()
 def list_students():
+    if _role() not in ("admin", "teacher"):
+        return jsonify(error="Forbidden"), 403
     q = request.args.get("q", "").strip().lower()
     status = request.args.get("status")
     query = Student.query
@@ -72,6 +78,8 @@ def create_application():
 @bp.post("/students")
 @jwt_required()
 def create_student():
+    if _role() != "admin":
+        return jsonify(error="Admins only"), 403
     # Admin-created student. Defaults to approved (added directly to the roster).
     data = request.get_json(silent=True) or {}
     student = Student.from_payload(data)
@@ -88,6 +96,8 @@ def create_student():
 @bp.put("/students/<sid>")
 @jwt_required()
 def update_student(sid):
+    if _role() != "admin":
+        return jsonify(error="Admins only"), 403
     student = db.session.get(Student, sid)
     if not student:
         return jsonify(error="Not found"), 404
@@ -106,6 +116,8 @@ def update_student(sid):
 @bp.patch("/students/<sid>/status")
 @jwt_required()
 def set_status(sid):
+    if _role() != "admin":
+        return jsonify(error="Admins only"), 403
     student = db.session.get(Student, sid)
     if not student:
         return jsonify(error="Not found"), 404
@@ -124,6 +136,8 @@ def set_status(sid):
 @bp.delete("/students/<sid>")
 @jwt_required()
 def delete_student(sid):
+    if _role() != "admin":
+        return jsonify(error="Admins only"), 403
     student = db.session.get(Student, sid)
     if not student:
         return jsonify(error="Not found"), 404

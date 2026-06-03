@@ -8,7 +8,7 @@ import PasswordReset from "./PasswordReset";
 type Tab = "enrollment" | "create" | "reset";
 
 interface Props {
-  onAuthenticated: (email: string) => void;
+  onAuthenticated: (email: string, role: string) => void;
 }
 
 // School details — edit these for a different school.

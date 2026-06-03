@@ -18,7 +18,9 @@ class User(db.Model):
     id = db.Column(db.String, primary_key=True, default=_uuid)
     email = db.Column(db.String, unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String, nullable=False)
-    role = db.Column(db.String, nullable=False, default="parent")  # admin/teacher/parent
+    role = db.Column(db.String, nullable=False, default="parent")  # admin/teacher/parent/staff
+    hourly_rate = db.Column(db.Float, nullable=False, default=0.0)
+    is_owner = db.Column(db.Boolean, nullable=False, default=False)
 
     # Password handling lives on the server. Werkzeug uses a salted PBKDF2 hash.
     def set_password(self, raw: str) -> None:
@@ -26,6 +28,9 @@ class User(db.Model):
 
     def check_password(self, raw: str) -> bool:
         return check_password_hash(self.password_hash, raw)
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "email": self.email, "role": self.role, "hourlyRate": self.hourly_rate, "isOwner": self.is_owner}
 
 
 class Student(db.Model):
@@ -103,4 +108,22 @@ class Attachment(db.Model):
             "contentType": self.content_type,
             "size": self.size,
             "uploadedAt": self.uploaded_at.isoformat() if self.uploaded_at else "",
+        }
+
+
+class TimeEntry(db.Model):
+    __tablename__ = "time_entries"
+    id = db.Column(db.String, primary_key=True, default=_uuid)
+    user_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False, index=True)
+    clock_in = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    clock_out = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self, email=None) -> dict:
+        return {
+            "id": self.id,
+            "userId": self.user_id,
+            "email": email,
+            "clockIn": self.clock_in.isoformat() if self.clock_in else None,
+            "clockOut": self.clock_out.isoformat() if self.clock_out else None,
+            "open": self.clock_out is None,
         }

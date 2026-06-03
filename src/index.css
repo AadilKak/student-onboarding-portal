@@ -183,3 +183,24 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .upload-btn{display:inline-flex;align-items:center;cursor:pointer;margin-top:10px}
 .linklike{background:none;border:none;color:var(--accent);cursor:pointer;padding:0;font-size:14px;text-decoration:underline}
 .auth-demo{text-align:center;margin-top:12px;font-size:13px;color:var(--muted)}
+.role-badge{background:#1f4e79;color:#fff;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;align-self:center}
+/* time clock */
+.clock-status{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:18px;margin:12px 0}
+.clock-btn{padding:12px 28px;font-size:15px;border-radius:999px}
+.clocked-in{color:var(--ok)}
+.clocked-out{color:var(--muted)}
+/* admin time dashboard layout */
+.time-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}
+@media (max-width:680px){.time-layout{grid-template-columns:1fr}}
+.staff-list{display:flex;flex-direction:column;gap:4px}
+.staff-item{text-align:left;border:1px solid var(--border);background:#fff;border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+.staff-item--active{background:#1f4e79;color:#fff;border-color:#1f4e79}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.detail-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.detail-header h3{margin:0;font-size:16px}
+/* payroll totals + print */
+.total-row td{border-top:2px solid var(--ink)}
+@media print {
+  .no-print, .tabs, .header, .role-switch { display:none !important; }
+  .app { max-width:none; }
+}

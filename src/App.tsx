@@ -8,6 +8,10 @@ import EnrollmentWizard from "./enroll/EnrollmentWizard";
 import AdminView from "./components/AdminView";
 import Roster from "./components/Roster";
 import ParentPortal from "./components/ParentPortal";
+import Users from "./components/Users";
+import TimeClock from "./components/TimeClock";
+import TimeEntriesAdmin from "./components/TimeEntriesAdmin";
+import Payroll from "./components/Payroll";
 import AuthPage from "./auth/AuthPage";
 
 // Which views each role can navigate between.
@@ -15,8 +19,16 @@ const VIEWS: Record<Role, { id: string; label: string }[]> = {
   admin: [
     { id: "applications", label: "Applications" },
     { id: "roster", label: "Roster" },
+    { id: "users", label: "Users" },
+    { id: "time", label: "Time Entries" },
+    { id: "payroll", label: "Payroll" },
+    { id: "timeclock", label: "Time Clock" },
   ],
-  teacher: [{ id: "roster", label: "Roster" }],
+  teacher: [
+    { id: "roster", label: "Roster" },
+    { id: "timeclock", label: "Time Clock" },
+  ],
+  staff: [{ id: "timeclock", label: "Time Clock" }],
   parent: [
     { id: "enroll", label: "Enroll a Student" },
     { id: "portal", label: "My Students" },
@@ -65,7 +77,7 @@ export default function App() {
   const enrolled = records.filter((r) => r.status === "approved");
 
   if (!session) {
-    return <AuthPage onAuthenticated={(email) => { setSession(email); switchRole("parent"); }} />;
+    return <AuthPage onAuthenticated={(email, role) => { setSession(email); switchRole(role as Role); }} />;
   }
 
   return (
@@ -77,11 +89,7 @@ export default function App() {
         </div>
         <div className="role-switch">
           <span className="acct">{session}</span>
-          {(["admin", "teacher", "parent"] as Role[]).map((r) => (
-            <button key={r} className={role === r ? "pill pill--active" : "pill"} onClick={() => switchRole(r)}>
-              {r[0].toUpperCase() + r.slice(1)}
-            </button>
-          ))}
+          <span className="role-badge">{role[0].toUpperCase() + role.slice(1)}</span>
           <button className="pill" onClick={() => { api.clearToken(); setSession(null); }}>Sign out</button>
         </div>
       </header>
@@ -101,6 +109,12 @@ export default function App() {
       )}
       {role === "admin" && view === "roster" && <Roster students={enrolled} onSave={save} onCreate={createStudent} onDelete={remove} />}
       {role === "teacher" && view === "roster" && <Roster students={enrolled} onSave={save} readOnly />}
+      {role === "admin" && view === "users" && <Users />}
+      {role === "admin" && view === "time" && <TimeEntriesAdmin />}
+      {role === "admin" && view === "payroll" && <Payroll />}
+      {role === "staff" && view === "timeclock" && <TimeClock />}
+      {role === "teacher" && view === "timeclock" && <TimeClock />}
+      {role === "admin" && view === "timeclock" && <TimeClock />}
     </div>
   );
 }

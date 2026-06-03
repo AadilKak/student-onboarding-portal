@@ -23,8 +23,8 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    token = create_access_token(identity=user.id, additional_claims={"role": user.role, "email": user.email})
-    return jsonify(token=token, role=user.role), 201
+    token = create_access_token(identity=user.id, additional_claims={"role": user.role, "email": user.email, "owner": user.is_owner})
+    return jsonify(token=token, role=user.role, isOwner=user.is_owner), 201
 
 
 @bp.post("/login")
@@ -36,5 +36,5 @@ def login():
     if not user or not user.check_password(password):
         return jsonify(error="Incorrect email or password"), 401
 
-    token = create_access_token(identity=user.id, additional_claims={"role": user.role, "email": user.email})
-    return jsonify(token=token, role=user.role)
+    token = create_access_token(identity=user.id, additional_claims={"role": user.role, "email": user.email, "owner": user.is_owner})
+    return jsonify(token=token, role=user.role, isOwner=user.is_owner)
