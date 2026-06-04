@@ -84,11 +84,11 @@ export default function TimeEntriesAdmin() {
             <p className="empty">No entries to show.</p>
           ) : (
             <table className="table">
-              <thead><tr><th>Staff</th><th>Clock in</th><th>Clock out</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr>{selected === "all" && <th>Staff</th>}<th>Clock in</th><th>Clock out</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {visible.map((e) => (
                   <tr key={e.id}>
-                    <td>{e.name || e.email}</td>
+                    {selected === "all" && <td>{e.name || e.email}</td>}
                     <td>{fmt(e.clockIn)}</td>
                     <td>{e.open ? <span className="badge badge--pending">in progress</span> : fmt(e.clockOut)}</td>
                     <td>{e.open ? "—" : hours(e.clockIn, e.clockOut).toFixed(2)}</td>

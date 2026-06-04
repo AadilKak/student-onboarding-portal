@@ -206,3 +206,18 @@ body{margin:0;background:var(--bg);color:var(--ink);
   .print-area { position: absolute; left: 0; top: 0; width: 100%; }
   .no-print { display: none !important; }
 }
+
+/* ===== Users page polish ===== */
+.user-section{margin-bottom:26px}
+.user-section-title{font-size:15px;color:#1f4e79;margin:0 0 8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.user-section-title .muted-count{background:#eef1f5;border-radius:999px;padding:1px 9px;font-size:12px;margin-left:6px}
+.users-table td{vertical-align:middle}
+.u-name{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.u-owner{background:#1f4e79;color:#fff}
+.u-select{width:120px;padding:6px 8px;text-transform:capitalize}
+.u-rate{display:inline-flex;align-items:center;gap:2px}
+.u-rateinput{width:74px;padding:6px 8px}
+
+/* ===== Time entries: tighter, less congested ===== */
+.time-layout .table th,.time-layout .table td{padding:8px 10px}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}

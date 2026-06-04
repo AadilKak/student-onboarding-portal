@@ -1,4 +1,4 @@
-// Admin-only user management, grouped into sections by role.
+// Admin-only user management, grouped into clean sections by role.
 import { useEffect, useState } from "react";
 import * as api from "../api/repository";
 import type { UserRow } from "../api/repository";
@@ -6,7 +6,6 @@ import type { Role } from "../types";
 
 const ROLES: Role[] = ["admin", "teacher", "parent", "staff"];
 
-// Sections shown in order; each lists the users with that role.
 const SECTIONS: { role: Role; label: string; payable: boolean }[] = [
   { role: "admin", label: "Administrators", payable: false },
   { role: "teacher", label: "Teachers", payable: true },
@@ -26,7 +25,7 @@ export default function Users() {
     const rate = parseFloat(value);
     if (Number.isNaN(rate)) return;
     const res = await api.setUserRate(id, rate);
-    if (!res.ok) setError(res.error ?? "Failed."); else setError("");
+    setError(res.ok ? "" : (res.error ?? "Failed."));
     await refresh();
   }
   async function change(id: string, role: Role) {
@@ -44,32 +43,34 @@ export default function Users() {
         const group = users.filter((u) => u.role === role);
         return (
           <div key={role} className="user-section">
-            <h3 className="step-h">{label} <span className="muted-count">({group.length})</span></h3>
+            <h3 className="user-section-title">{label} <span className="muted-count">{group.length}</span></h3>
             {group.length === 0 ? (
               <p className="empty">No {label.toLowerCase()}.</p>
             ) : (
-              <table className="table">
-                <thead><tr><th>Name</th><th>Role</th>{payable && <th>Hourly rate ($)</th>}</tr></thead>
+              <table className="table users-table">
+                <colgroup><col style={{ width: "55%" }} /><col style={{ width: "25%" }} /><col style={{ width: "20%" }} /></colgroup>
+                <thead><tr><th>Name</th><th>Role</th><th>Hourly rate</th></tr></thead>
                 <tbody>
                   {group.map((u) => (
                     <tr key={u.id}>
                       <td>
-                        <div>{u.name || <span className="muted-count">—</span>}</div>
-                        <div className="muted-count">{u.email}{u.isOwner && <span className="badge" style={{ marginLeft: 6 }}>owner</span>}</div>
+                        <div className="u-name">{u.name || <span className="muted-count">No name set</span>}
+                          {u.isOwner && <span className="badge u-owner">owner</span>}</div>
+                        <div className="muted-count">{u.email}</div>
                       </td>
                       <td>
-                        <select className="ef-input" style={{ width: "auto" }} value={u.role}
+                        <select className="ef-input u-select" value={u.role}
                           disabled={!owner && (u.role === "admin" || u.isOwner)}
                           onChange={(e) => change(u.id, e.target.value as Role)}>
                           {ROLES.filter((r) => owner || r !== "admin").map((r) => <option key={r} value={r}>{r}</option>)}
                         </select>
                       </td>
-                      {payable && (
-                        <td>
-                          <input className="ef-input" style={{ width: 90 }} type="number" min="0" step="0.5"
-                            defaultValue={u.hourlyRate} onBlur={(e) => changeRate(u.id, e.target.value)} />
-                        </td>
-                      )}
+                      <td>
+                        {payable
+                          ? <span className="u-rate">$<input className="ef-input u-rateinput" type="number" min="0" step="0.5"
+                              defaultValue={u.hourlyRate} onBlur={(e) => changeRate(u.id, e.target.value)} /></span>
+                          : <span className="muted-count">—</span>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
