@@ -31,6 +31,11 @@ const VIEWS: Record<Role, { id: string; label: string }[]> = {
     { id: "timeclock", label: "Time Clock" },
   ],
   staff: [{ id: "timeclock", label: "Time Clock" }],
+  contractor: [{ id: "timeclock", label: "Time Clock" }],
+  lead: [
+    { id: "time", label: "Time Entries" },
+    { id: "timeclock", label: "Time Clock" },
+  ],
   parent: [
     { id: "enroll", label: "Enroll a Student" },
     { id: "portal", label: "My Students" },
@@ -112,12 +117,15 @@ export default function App() {
       {role === "admin" && view === "roster" && <Roster students={enrolled} onSave={save} onCreate={createStudent} onDelete={remove} />}
       {role === "teacher" && view === "roster" && <Roster students={enrolled} onSave={save} readOnly />}
       {role === "admin" && view === "users" && <Users />}
-      {role === "admin" && view === "time" && <TimeEntriesAdmin />}
+      {role === "admin" && view === "time" && <TimeEntriesAdmin canDelete />}
+      {role === "lead" && view === "time" && <TimeEntriesAdmin canDelete={false} />}
       {role === "admin" && view === "payroll" && <Payroll />}
       {role === "admin" && view === "audit" && <Audit />}
       {role === "staff" && view === "timeclock" && <TimeClock />}
+      {role === "contractor" && view === "timeclock" && <TimeClock />}
       {role === "teacher" && view === "timeclock" && <TimeClock />}
       {role === "admin" && view === "timeclock" && <TimeClock />}
+      {role === "lead" && view === "timeclock" && <TimeClock />}
     </div>
   );
 }

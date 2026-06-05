@@ -4,11 +4,12 @@ import * as api from "../api/repository";
 import type { UserRow } from "../api/repository";
 import type { Role } from "../types";
 
-const ROLES: Role[] = ["admin", "teacher", "parent", "staff"];
+const ROLES: Role[] = ["admin", "lead", "teacher", "parent", "staff"];
 
 const SECTIONS: { role: Role; label: string; payable: boolean }[] = [
   { role: "admin", label: "Administrators", payable: false },
   { role: "teacher", label: "Teachers", payable: true },
+  { role: "lead", label: "Lead Staff", payable: true },
   { role: "staff", label: "Staff", payable: true },
   { role: "parent", label: "Parents", payable: false },
 ];

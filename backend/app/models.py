@@ -166,3 +166,17 @@ class AuditLog(db.Model):
     def to_dict(self):
         return {"id": self.id, "actor": self.actor, "action": self.action,
                 "detail": self.detail, "at": _utc_iso(self.created)}
+
+
+class Feedback(db.Model):
+    __tablename__ = "feedback"
+    id = db.Column(db.String, primary_key=True, default=_uuid)
+    email = db.Column(db.String, default="")
+    role = db.Column(db.String, default="")
+    rating = db.Column(db.Integer, default=0)   # 1-5, 0 = none
+    message = db.Column(db.Text, default="")
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {"id": self.id, "email": self.email, "role": self.role,
+                "rating": self.rating, "message": self.message, "at": _utc_iso(self.created)}

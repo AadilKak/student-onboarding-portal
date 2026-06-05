@@ -13,8 +13,8 @@ from app.models import User, TimeEntry
 
 # email -> list of (days_ago_start, hours_per_day) shift blocks
 PLAN = {
-    "staff@demo.school":   [(13, 8), (12, 8), (11, 9), (8, 8), (7, 8), (6, 9), (5, 8), (1, 8)],
-    "teacher@demo.school": [(13, 7), (12, 7), (11, 7), (8, 6), (7, 8), (6, 7), (5, 7), (1, 6)],
+    "contractor":  [(12, 6), (10, 7), (9, 8), (5, 6), (3, 7), (2, 6), (1, 7)],
+    "contractor2": [(11, 8), (10, 6), (8, 7), (4, 8), (3, 6), (2, 7)],
 }
 
 app = create_app()

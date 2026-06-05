@@ -200,6 +200,24 @@ export async function setUserName(id: string, name: string): Promise<AuthResult>
   } catch { return { ok: false, error: "Cannot reach the server." }; }
 }
 
+export async function deleteAccount(id: string): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/users/${id}`, { method: "DELETE", headers: authHeaders() });
+    if (!res.ok && res.status !== 204) return { ok: false, error: (await res.json()).error ?? "Could not remove." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
+export async function createAccount(opts: { name: string; username: string; pin: string; role: Role; hourlyRate: number }): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/users`, {
+      method: "POST", headers: authHeaders(true), body: JSON.stringify(opts),
+    });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not create account." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
 export interface PayrollRow { userId: string; email: string; name: string; role: Role; hourlyRate: number; regularHours: number; overtimeHours: number; unapprovedHours: number; grossPay: number; }
 export interface PayrollResult { start: string; end: string; rows: PayrollRow[]; }
 
@@ -270,12 +288,47 @@ export async function approveAllForUser(userId: string): Promise<void> {
     method: "POST", headers: authHeaders(true), body: JSON.stringify({ userId }),
   });
 }
+export async function editTimeEntry(id: string, clockIn: string | null, clockOut: string | null): Promise<AuthResult> {
+  try {
+    const body: Record<string, string> = {};
+    if (clockIn) body.clockIn = clockIn;
+    if (clockOut) body.clockOut = clockOut;
+    const res = await fetch(`${API}/time/entries/${id}`, {
+      method: "PATCH", headers: authHeaders(true), body: JSON.stringify(body),
+    });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not save." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
 export async function deleteTimeEntry(id: string): Promise<void> {
   await fetch(`${API}/time/entries/${id}`, { method: "DELETE", headers: authHeaders() });
 }
 export async function getAudit(): Promise<AuditRow[]> {
   try {
     const res = await fetch(`${API}/audit`, { headers: authHeaders() });
+    if (!res.ok) return [];
+    return res.json();
+  } catch { return []; }
+}
+
+
+// ===== Feedback =====
+export interface FeedbackRow { id: string; email: string; role: string; rating: number; message: string; at: string; }
+
+export async function submitFeedback(rating: number, message: string): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/feedback`, {
+      method: "POST", headers: authHeaders(true), body: JSON.stringify({ rating, message }),
+    });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not send." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
+export async function listFeedback(): Promise<FeedbackRow[]> {
+  try {
+    const res = await fetch(`${API}/feedback`, { headers: authHeaders() });
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }

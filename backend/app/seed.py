@@ -12,6 +12,9 @@ ACCOUNTS = [
     ("teacher@demo.school", "Demo1234!", "teacher", 25.0, False, "James Carter"),
     ("staff@demo.school", "Demo1234!", "staff", 18.0, False, "Maria Lopez"),
     ("parent@demo.school", "Demo1234!", "parent", 0.0, False, "Fartun Korane"),
+    ("lead@demo.school", "Demo1234!", "lead", 0.0, False, "Dana Reed"),
+    ("contractor", "1234", "contractor", 20.0, False, "Carlos Mendez"),
+    ("contractor2", "1234", "contractor", 19.0, False, "Aisha Khan"),
 ]
 
 
@@ -39,8 +42,8 @@ def seed_demo():
     # Time Entries and Payroll tabs show real data on a fresh deploy.
     if TimeEntry.query.first() is None:
         plan = {
-            "staff@demo.school":   [(13, 8), (12, 8), (11, 9), (8, 8), (7, 8), (6, 9), (5, 8), (1, 8)],
-            "teacher@demo.school": [(13, 7), (12, 7), (11, 7), (8, 6), (7, 8), (6, 7), (5, 7), (1, 6)],
+            "contractor":  [(12, 6), (10, 7), (9, 8), (5, 6), (3, 7), (2, 6), (1, 7)],
+            "contractor2": [(11, 8), (10, 6), (8, 7), (4, 8), (3, 6), (2, 7)],
         }
         today = date.today()
         for email, shifts in plan.items():

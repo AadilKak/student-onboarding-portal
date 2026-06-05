@@ -23,12 +23,14 @@ def create_app(config_class=Config):
     from .users import bp as users_bp
     from .timeclock import bp as timeclock_bp
     from .payroll import bp as payroll_bp
+    from .feedback import bp as feedback_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(students_bp)
     app.register_blueprint(files_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(timeclock_bp)
     app.register_blueprint(payroll_bp)
+    app.register_blueprint(feedback_bp)
 
     with app.app_context():
         db.create_all()

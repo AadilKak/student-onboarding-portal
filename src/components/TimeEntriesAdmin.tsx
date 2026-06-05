@@ -13,7 +13,16 @@ function hours(a: string | null, b: string | null): number {
   return (new Date(b).getTime() - new Date(a).getTime()) / 3600000;
 }
 
-export default function TimeEntriesAdmin() {
+interface Props { canDelete?: boolean; }
+
+function toLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 16);
+}
+
+export default function TimeEntriesAdmin({ canDelete = true }: Props) {
   const [entries, setEntries] = useState<TimeEntryRow[]>([]);
   const [selected, setSelected] = useState<string>("all");
 
@@ -25,6 +34,23 @@ export default function TimeEntriesAdmin() {
   async function approveAll() {
     const row = entries.find((e) => e.email === selected);
     if (row) { await api.approveAllForUser(row.userId); await refresh(); }
+  }
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editIn, setEditIn] = useState("");
+  const [editOut, setEditOut] = useState("");
+  function openEdit(e: TimeEntryRow) {
+    setEditId(e.id);
+    setEditIn(toLocalInput(e.clockIn));
+    setEditOut(toLocalInput(e.clockOut));
+  }
+  async function saveEdit() {
+    if (!editId) return;
+    const ci = editIn ? new Date(editIn).toISOString() : null;
+    const co = editOut ? new Date(editOut).toISOString() : null;
+    await api.editTimeEntry(editId, ci, co);
+    setEditId(null);
+    await refresh();
   }
 
   // Unique staff (display name falls back to email), with a "currently in" flag.
@@ -101,7 +127,8 @@ export default function TimeEntriesAdmin() {
                       {!e.open && (e.approved
                         ? <button className="btn btn--small" onClick={() => approve(e.id, false)}>Unapprove</button>
                         : <button className="btn btn--small btn--ok" onClick={() => approve(e.id, true)}>Approve</button>)}
-                      <button className="btn btn--small btn--bad" onClick={() => remove(e.id)}>Delete</button>
+                      <button className="btn btn--small" onClick={() => openEdit(e)}>Edit</button>
+                      {canDelete && <button className="btn btn--small btn--bad" onClick={() => remove(e.id)}>Delete</button>}
                     </td>
                   </tr>
                 ))}
@@ -110,6 +137,25 @@ export default function TimeEntriesAdmin() {
           )}
         </section>
       </div>
+
+      {editId && (
+        <div className="modal-backdrop" onClick={() => setEditId(null)}>
+          <div className="modal" onClick={(ev) => ev.stopPropagation()}>
+            <div className="modal-head"><h2>Edit time entry</h2><button className="expand" onClick={() => setEditId(null)}>✕</button></div>
+            <p className="muted-count">Fix a missed or wrong clock-out here. Leave clock-out empty to keep the shift open.</p>
+            <div className="step-body">
+              <label className="ef"><span className="ef-label">Clock in</span>
+                <input className="ef-input" type="datetime-local" value={editIn} onChange={(e) => setEditIn(e.target.value)} /></label>
+              <label className="ef"><span className="ef-label">Clock out</span>
+                <input className="ef-input" type="datetime-local" value={editOut} onChange={(e) => setEditOut(e.target.value)} /></label>
+            </div>
+            <div className="actions">
+              <button className="btn btn--ghost" onClick={() => setEditId(null)}>Cancel</button>
+              <button className="btn btn--primary" onClick={saveEdit}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

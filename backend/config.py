@@ -26,6 +26,6 @@ class Config:
     S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL")  # set for MinIO/local S3
 
     # Demo: auto-create sample accounts/students when the DB is empty.
-    SEED_DEMO = os.environ.get("SEED_DEMO", "0") == "1"
+    SEED_DEMO = os.environ.get("SEED_DEMO", "1") == "1"
     # Optional: restrict CORS to your deployed frontend (else allow all).
     FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN")

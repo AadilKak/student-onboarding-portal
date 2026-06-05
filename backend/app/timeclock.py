@@ -25,6 +25,11 @@ def _is_admin():
     return _claims().get("role") == "admin"
 
 
+def _can_review():
+    # Admins and lead staff can view + approve time logs.
+    return _claims().get("role") in ("admin", "lead")
+
+
 def _open_entry(uid):
     return TimeEntry.query.filter_by(user_id=uid, clock_out=None).first()
 
@@ -81,8 +86,8 @@ def my_entries():
 @bp.get("/time/entries")
 @jwt_required()
 def all_entries():
-    if not _is_admin():
-        return jsonify(error="Admins only"), 403
+    if not _can_review():
+        return jsonify(error="Not authorized"), 403
     rows = (db.session.query(TimeEntry, User.email, User.full_name)
             .join(User, User.id == TimeEntry.user_id)
             .order_by(TimeEntry.clock_in.desc()).all())
@@ -96,8 +101,8 @@ def all_entries():
 @bp.patch("/time/entries/<eid>/approve")
 @jwt_required()
 def approve_entry(eid):
-    if not _is_admin():
-        return jsonify(error="Admins only"), 403
+    if not _can_review():
+        return jsonify(error="Not authorized"), 403
     e = db.session.get(TimeEntry, eid)
     if not e:
         return jsonify(error="Not found"), 404
@@ -110,8 +115,8 @@ def approve_entry(eid):
 @bp.post("/time/approve-all")
 @jwt_required()
 def approve_all():
-    if not _is_admin():
-        return jsonify(error="Admins only"), 403
+    if not _can_review():
+        return jsonify(error="Not authorized"), 403
     uid = (request.get_json(silent=True) or {}).get("userId")
     q = TimeEntry.query.filter(TimeEntry.clock_out.isnot(None), TimeEntry.approved.is_(False))
     if uid:
@@ -128,16 +133,20 @@ def approve_all():
 @bp.patch("/time/entries/<eid>")
 @jwt_required()
 def edit_entry(eid):
-    if not _is_admin():
-        return jsonify(error="Admins only"), 403
+    if not _can_review():
+        return jsonify(error="Not authorized"), 403
     e = db.session.get(TimeEntry, eid)
     if not e:
         return jsonify(error="Not found"), 404
     data = request.get_json(silent=True) or {}
+
+    def parse(v):
+        return datetime.fromisoformat(v.replace("Z", "+00:00"))
+
     if data.get("clockIn"):
-        e.clock_in = datetime.fromisoformat(data["clockIn"])
+        e.clock_in = parse(data["clockIn"])
     if data.get("clockOut"):
-        e.clock_out = datetime.fromisoformat(data["clockOut"])
+        e.clock_out = parse(data["clockOut"])
     _audit("edit", f"entry {eid}")
     db.session.commit()
     return jsonify(e.to_dict())

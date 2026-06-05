@@ -221,3 +221,21 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* ===== Time entries: tighter, less congested ===== */
 .time-layout .table th,.time-layout .table td{padding:8px 10px}
 .row-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ===== Simple Time Clock login ===== */
+.tc-login{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.tc-login-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:360px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.tc-title{color:#1f4e79;text-align:center;margin:0 0 4px;font-size:22px}
+.tc-sub{text-align:center;color:var(--muted);margin:0 0 22px;font-size:14px}
+.tc-label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+.tc-input{width:100%;padding:11px 12px;border:1px solid #c9ced6;border-radius:8px;font-size:16px}
+.tc-loginbtn{width:100%;margin-top:20px;padding:12px;border-radius:8px;font-size:16px}
+.acct-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.acct-form .ef-input{width:auto;flex:0 0 auto}
+.tc-demo{text-align:center;margin-top:14px;font-size:13px;color:var(--muted)}
+
+/* feedback widget */
+.fb-fab{position:fixed;right:18px;bottom:18px;z-index:50;background:#1f4e79;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.fb-stars{display:flex;gap:6px;margin:6px 0 12px}
+.fb-star{background:none;border:none;font-size:26px;color:#d0d5dd;cursor:pointer;line-height:1}
+.fb-star--on{color:#f5b301}
