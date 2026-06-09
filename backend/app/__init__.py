@@ -24,6 +24,8 @@ def create_app(config_class=Config):
     from .timeclock import bp as timeclock_bp
     from .payroll import bp as payroll_bp
     from .feedback import bp as feedback_bp
+    from .notes import bp as notes_bp
+    from .messages import bp as messages_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(students_bp)
     app.register_blueprint(files_bp)
@@ -31,6 +33,8 @@ def create_app(config_class=Config):
     app.register_blueprint(timeclock_bp)
     app.register_blueprint(payroll_bp)
     app.register_blueprint(feedback_bp)
+    app.register_blueprint(notes_bp)
+    app.register_blueprint(messages_bp)
 
     with app.app_context():
         db.create_all()
@@ -41,7 +45,7 @@ def create_app(config_class=Config):
 
     @app.get("/health")
     def health():
-        return {"status": "ok"}
+        return {"status": "ok", "version": "test-1"}
 
     return app
 
@@ -66,6 +70,18 @@ def _ensure_columns():
             db.session.commit()
         if "full_name" not in ucols:
             db.session.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR DEFAULT ''"))
+            db.session.commit()
+        for col in ("title", "phone", "address"):
+            if col not in ucols:
+                db.session.execute(text(f"ALTER TABLE users ADD COLUMN {col} VARCHAR DEFAULT ''"))
+                db.session.commit()
+    if "notes" in inspector.get_table_names():
+        ncols = {c["name"] for c in inspector.get_columns("notes")}
+        if "resolved" not in ncols:
+            db.session.execute(text("ALTER TABLE notes ADD COLUMN resolved BOOLEAN DEFAULT FALSE"))
+            db.session.commit()
+        if "response" not in ncols:
+            db.session.execute(text("ALTER TABLE notes ADD COLUMN response TEXT DEFAULT ''"))
             db.session.commit()
     if "time_entries" in inspector.get_table_names():
         tcols = {c["name"] for c in inspector.get_columns("time_entries")}

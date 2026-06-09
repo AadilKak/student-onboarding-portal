@@ -43,6 +43,9 @@ def create_user():
         return jsonify(error="That username already exists"), 409
     u = User(email=username, role=role)
     u.full_name = (data.get("name") or "").strip()
+    u.title = (data.get("title") or "").strip()
+    u.phone = (data.get("phone") or "").strip()
+    u.address = (data.get("address") or "").strip()
     try:
         u.hourly_rate = float(data.get("hourlyRate") or 0)
     except (TypeError, ValueError):
@@ -92,6 +95,23 @@ def set_role(uid):
     if user.is_owner and uid != get_jwt_identity():
         return jsonify(error="The owner account cannot be changed."), 403
     user.role = role
+    db.session.commit()
+    return jsonify(user.to_dict())
+
+
+@bp.patch("/users/<uid>/profile")
+@jwt_required()
+def set_profile(uid):
+    if not _is_admin():
+        return jsonify(error="Admins only"), 403
+    user = db.session.get(User, uid)
+    if not user:
+        return jsonify(error="Not found"), 404
+    data = request.get_json(silent=True) or {}
+    if "name" in data: user.full_name = str(data["name"]).strip()
+    if "title" in data: user.title = str(data["title"]).strip()
+    if "phone" in data: user.phone = str(data["phone"]).strip()
+    if "address" in data: user.address = str(data["address"]).strip()
     db.session.commit()
     return jsonify(user.to_dict())
 

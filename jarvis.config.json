@@ -1,0 +1,15 @@
+{
+  "name": "student-onboarding-portal",
+  "services": [
+    {
+      "label": "frontend",
+      "folder": "C:\\Users\\aadil\\OneDrive\\School\\Documents\\Projects\\GradeLink Clone\\student-onboarding-portal",
+      "command": "npm run dev"
+    },
+    {
+      "label": "backend",
+      "folder": "C:\\Users\\aadil\\OneDrive\\School\\Documents\\Projects\\GradeLink Clone\\student-onboarding-portal\\backend",
+      "command": "python wsgi.py"
+    }
+  ]
+}

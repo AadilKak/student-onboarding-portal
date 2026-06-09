@@ -32,6 +32,11 @@ function authHeaders(json = false): HeadersInit {
   return h;
 }
 
+// Wake a sleeping (free-tier) backend early, overlapping cold start with typing.
+export function prewarm(): void {
+  fetch(`${API}/health`).catch(() => {});
+}
+
 // ===== Auth =====
 export interface AuthResult { ok: boolean; error?: string; role?: Role; }
 
@@ -170,7 +175,7 @@ export async function downloadFile(fileId: string, filename: string): Promise<vo
 }
 
 // ===== User management (admin only) =====
-export interface UserRow { id: string; email: string; name: string; role: Role; hourlyRate: number; isOwner: boolean; }
+export interface UserRow { id: string; email: string; name: string; title: string; phone: string; address: string; role: Role; hourlyRate: number; isOwner: boolean; }
 
 export async function listUsers(): Promise<UserRow[]> {
   try {
@@ -208,7 +213,7 @@ export async function deleteAccount(id: string): Promise<AuthResult> {
   } catch { return { ok: false, error: "Cannot reach the server." }; }
 }
 
-export async function createAccount(opts: { name: string; username: string; pin: string; role: Role; hourlyRate: number }): Promise<AuthResult> {
+export async function createAccount(opts: { name: string; username: string; pin: string; role: Role; hourlyRate: number; title?: string; phone?: string; address?: string }): Promise<AuthResult> {
   try {
     const res = await fetch(`${API}/users`, {
       method: "POST", headers: authHeaders(true), body: JSON.stringify(opts),
@@ -332,4 +337,68 @@ export async function listFeedback(): Promise<FeedbackRow[]> {
     if (!res.ok) return [];
     return res.json();
   } catch { return []; }
+}
+
+
+// ===== Notes + profile =====
+export interface NoteRow { id: string; subjectId: string; author: string; body: string; at: string; resolved: boolean; response: string; subjectName?: string; subjectEmail?: string; }
+
+export async function addNote(body: string, subjectUserId?: string): Promise<AuthResult> {
+  try {
+    const payload: Record<string, string> = { body };
+    if (subjectUserId) payload.subjectUserId = subjectUserId;
+    const res = await fetch(`${API}/notes`, { method: "POST", headers: authHeaders(true), body: JSON.stringify(payload) });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not save note." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+export async function resolveNote(id: string, resolved: boolean, response?: string): Promise<AuthResult> {
+  try {
+    const body: Record<string, unknown> = { resolved };
+    if (response !== undefined) body.response = response;
+    const res = await fetch(`${API}/notes/${id}`, { method: "PATCH", headers: authHeaders(true), body: JSON.stringify(body) });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not update." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+export async function deleteNote(id: string): Promise<void> {
+  await fetch(`${API}/notes/${id}`, { method: "DELETE", headers: authHeaders() });
+}
+export async function myNotes(): Promise<NoteRow[]> {
+  try { const r = await fetch(`${API}/notes/me`, { headers: authHeaders() }); return r.ok ? r.json() : []; }
+  catch { return []; }
+}
+export async function listAllNotes(): Promise<NoteRow[]> {
+  try { const r = await fetch(`${API}/notes`, { headers: authHeaders() }); return r.ok ? r.json() : []; }
+  catch { return []; }
+}
+export async function listUserNotes(userId: string): Promise<NoteRow[]> {
+  try { const r = await fetch(`${API}/users/${userId}/notes`, { headers: authHeaders() }); return r.ok ? r.json() : []; }
+  catch { return []; }
+}
+export async function updateProfile(userId: string, fields: { name?: string; title?: string; phone?: string; address?: string }): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/users/${userId}/profile`, { method: "PATCH", headers: authHeaders(true), body: JSON.stringify(fields) });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not save." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+
+
+// ===== Admin messaging =====
+export interface MessageRow { id: string; sender: string; recipient: string; body: string; read: boolean; at: string; }
+
+export async function listMessages(): Promise<MessageRow[]> {
+  try { const r = await fetch(`${API}/messages`, { headers: authHeaders() }); return r.ok ? r.json() : []; }
+  catch { return []; }
+}
+export async function sendMessage(to: string, body: string): Promise<AuthResult> {
+  try {
+    const res = await fetch(`${API}/messages`, { method: "POST", headers: authHeaders(true), body: JSON.stringify({ to, body }) });
+    if (!res.ok) return { ok: false, error: (await res.json()).error ?? "Could not send." };
+    return { ok: true };
+  } catch { return { ok: false, error: "Cannot reach the server." }; }
+}
+export async function markMessagesRead(): Promise<void> {
+  await fetch(`${API}/messages/read`, { method: "POST", headers: authHeaders() });
 }

@@ -1,7 +1,7 @@
 // Staff time clock: a big clock in/out button plus a list of recent entries.
 import { useEffect, useState } from "react";
 import * as api from "../api/repository";
-import type { TimeEntryRow } from "../api/repository";
+import type { TimeEntryRow, NoteRow } from "../api/repository";
 
 function fmt(iso: string | null): string {
   if (!iso) return "—";
@@ -19,11 +19,21 @@ export default function TimeClock() {
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
+  const [note, setNote] = useState("");
+  const [noteMsg, setNoteMsg] = useState("");
+  const [myNotes, setMyNotes] = useState<NoteRow[]>([]);
 
-  async function refresh() { setEntries(await api.myTimeEntries()); setLoaded(true); }
+  async function refresh() { setEntries(await api.myTimeEntries()); setMyNotes(await api.myNotes()); setLoaded(true); }
   useEffect(() => { void refresh(); }, []);
 
   const open = entries.find((e) => e.open);
+
+  async function sendNote() {
+    if (!note.trim()) return;
+    const res = await api.addNote(note.trim());
+    setNoteMsg(res.ok ? "Sent to admin." : (res.error ?? "Failed."));
+    if (res.ok) { setNote(""); await refresh(); }
+  }
 
   async function toggle() {
     setBusy(true); setError("");
@@ -64,6 +74,27 @@ export default function TimeClock() {
             ))}
           </tbody>
         </table>
+      )}
+
+      <h3 className="step-h">Note to admin</h3>
+      <p className="muted-count">Missed a clock-in or had a problem? Leave a note and the admin will see it.</p>
+      <textarea className="ef-input" rows={3} placeholder="e.g. I forgot to clock in at 8am"
+        value={note} onChange={(e) => setNote(e.target.value)} />
+      <div style={{ marginTop: 8 }}>
+        <button className="btn" onClick={sendNote} disabled={!note.trim()}>Send note</button>
+        {noteMsg && <span className="muted-count" style={{ marginLeft: 10 }}>{noteMsg}</span>}
+      </div>
+
+      {myNotes.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          {myNotes.map((n) => (
+            <div key={n.id} className="note-card">
+              <p className="note-body">{n.body}</p>
+              {n.response && <p className="note-response">Admin: {n.response}</p>}
+              <span className={n.resolved ? "badge badge--ok" : "badge badge--pending"}>{n.resolved ? "resolved" : "open"}</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

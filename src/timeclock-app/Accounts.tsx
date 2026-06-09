@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import * as api from "../api/repository";
 import type { UserRow } from "../api/repository";
 import type { Role } from "../types";
+import ContractorEditor from "./ContractorEditor";
 
 export default function Accounts() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -11,17 +12,21 @@ export default function Accounts() {
   const [pin, setPin] = useState("");
   const [role, setRole] = useState<Role>("contractor");
   const [rate, setRate] = useState("0");
+  const [title, setTitle] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [msg, setMsg] = useState("");
+  const [editing, setEditing] = useState<UserRow | null>(null);
 
   async function refresh() { setUsers(await api.listUsers()); }
   useEffect(() => { void refresh(); }, []);
 
   async function add() {
     if (!username || !pin) { setMsg("Username and PIN are required."); return; }
-    const res = await api.createAccount({ name, username, pin, role, hourlyRate: role === "contractor" ? (parseFloat(rate) || 0) : 0 });
+    const res = await api.createAccount({ name, username, pin, role, hourlyRate: role === "contractor" ? (parseFloat(rate) || 0) : 0, title, phone, address });
     if (!res.ok) { setMsg(res.error ?? "Failed."); return; }
     setMsg(`Created ${username}.`);
-    setName(""); setUsername(""); setPin(""); setRate("0");
+    setName(""); setUsername(""); setPin(""); setRate("0"); setTitle(""); setPhone(""); setAddress("");
     await refresh();
   }
   async function changeRate(id: string, value: string) {
@@ -51,6 +56,9 @@ export default function Accounts() {
         </select>
         {role === "contractor" && <input className="ef-input" style={{ width: 90 }} type="number" min="0" step="0.5" placeholder="$/hr"
           value={rate} onChange={(e) => setRate(e.target.value)} />}
+        <input className="ef-input" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input className="ef-input" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="ef-input" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
         <button className="btn btn--primary" onClick={add}>Add</button>
       </div>
       {msg && <p className="muted-count">{msg}</p>}
@@ -68,11 +76,12 @@ export default function Accounts() {
                 ? <span>$<input className="ef-input" style={{ width: 74 }} type="number" min="0" step="0.5"
                     defaultValue={u.hourlyRate} onBlur={(e) => changeRate(u.id, e.target.value)} /></span>
                 : <span className="muted-count">—</span>}</td>
-              <td><button className="btn btn--small btn--bad" onClick={() => remove(u.id, u.name || u.email)}>Remove</button></td>
+              <td className="row-actions"><button className="btn btn--small" onClick={() => setEditing(u)}>Manage</button><button className="btn btn--small btn--bad" onClick={() => remove(u.id, u.name || u.email)}>Remove</button></td>
             </tr>
           ))}
         </tbody>
       </table>
+      {editing && <ContractorEditor user={editing} onClose={() => setEditing(null)} onSaved={refresh} />}
     </div>
   );
 }

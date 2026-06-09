@@ -9,6 +9,7 @@ from app.models import User
 ACCOUNTS = [
     # email, password, role, hourly_rate, is_owner, full_name
     ("admin@demo.school", "Demo1234!", "admin", 0.0, True, "Sarah Owner"),
+    ("admin2@demo.school", "Demo1234!", "admin", 0.0, True, "David Khan"),
     ("teacher@demo.school", "Demo1234!", "teacher", 25.0, False, "James Carter"),
     ("staff@demo.school", "Demo1234!", "staff", 18.0, False, "Maria Lopez"),
     ("parent@demo.school", "Demo1234!", "parent", 0.0, False, "Fartun Korane"),

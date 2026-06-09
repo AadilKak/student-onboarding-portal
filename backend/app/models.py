@@ -33,6 +33,9 @@ class User(db.Model):
     hourly_rate = db.Column(db.Float, nullable=False, default=0.0)
     is_owner = db.Column(db.Boolean, nullable=False, default=False)
     full_name = db.Column(db.String, nullable=False, default="")
+    title = db.Column(db.String, default="")
+    phone = db.Column(db.String, default="")
+    address = db.Column(db.String, default="")
 
     # Password handling lives on the server. Werkzeug uses a salted PBKDF2 hash.
     def set_password(self, raw: str) -> None:
@@ -42,7 +45,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, raw)
 
     def to_dict(self) -> dict:
-        return {"id": self.id, "email": self.email, "name": self.full_name, "role": self.role, "hourlyRate": self.hourly_rate, "isOwner": self.is_owner}
+        return {"id": self.id, "email": self.email, "name": self.full_name, "title": self.title, "phone": self.phone, "address": self.address, "role": self.role, "hourlyRate": self.hourly_rate, "isOwner": self.is_owner}
 
 
 class Student(db.Model):
@@ -180,3 +183,33 @@ class Feedback(db.Model):
     def to_dict(self):
         return {"id": self.id, "email": self.email, "role": self.role,
                 "rating": self.rating, "message": self.message, "at": _utc_iso(self.created)}
+
+
+class Note(db.Model):
+    __tablename__ = "notes"
+    id = db.Column(db.String, primary_key=True, default=_uuid)
+    subject_id = db.Column(db.String, db.ForeignKey("users.id"), nullable=False, index=True)  # who it's about
+    author = db.Column(db.String, default="")    # who wrote it (email)
+    body = db.Column(db.Text, default="")
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    resolved = db.Column(db.Boolean, nullable=False, default=False)
+    response = db.Column(db.Text, default="")
+
+    def to_dict(self):
+        return {"id": self.id, "subjectId": self.subject_id, "author": self.author,
+                "body": self.body, "at": _utc_iso(self.created),
+                "resolved": self.resolved, "response": self.response}
+
+
+class Message(db.Model):
+    __tablename__ = "messages"
+    id = db.Column(db.String, primary_key=True, default=_uuid)
+    sender = db.Column(db.String, default="")     # email
+    recipient = db.Column(db.String, default="")  # email
+    body = db.Column(db.Text, default="")
+    read = db.Column(db.Boolean, nullable=False, default=False)
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {"id": self.id, "sender": self.sender, "recipient": self.recipient,
+                "body": self.body, "read": self.read, "at": _utc_iso(self.created)}

@@ -10,6 +10,8 @@ import TimeEntriesAdmin from "../components/TimeEntriesAdmin";
 import Payroll from "../components/Payroll";
 import FeedbackWidget from "./FeedbackWidget";
 import FeedbackList from "./FeedbackList";
+import NotesList from "./NotesList";
+import Messages from "./Messages";
 
 export default function TimeClockApp() {
   const [user, setUser] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export default function TimeClockApp() {
   function onLogin(username: string, r: string) {
     setUser(username);
     setRole(r);
-    setView(r === "admin" ? "accounts" : r === "lead" ? "review" : "clock");
+    setView(r === "admin" ? "accounts" : r === "lead" ? "entries" : "clock");
   }
   function logout() { api.clearToken(); setUser(null); }
 
@@ -30,6 +32,8 @@ export default function TimeClockApp() {
     { id: "accounts", label: "Accounts" },
     { id: "entries", label: "Time Entries" },
     { id: "payroll", label: "Payroll" },
+    { id: "notes", label: "Notes" },
+    { id: "messages", label: "Messages" },
     { id: "feedback", label: "Feedback" },
   ];
 
@@ -53,11 +57,23 @@ export default function TimeClockApp() {
           {view === "accounts" && <Accounts />}
           {view === "entries" && <TimeEntriesAdmin canDelete />}
           {view === "payroll" && <Payroll />}
+          {view === "notes" && <NotesList />}
+          {view === "messages" && <Messages me={user} />}
           {view === "feedback" && <FeedbackList />}
         </>
       )}
 
-      {role === "lead" && <TimeEntriesAdmin canDelete={false} />}
+      {role === "lead" && (
+        <>
+          <nav className="tabs">
+            <button className={view === "entries" ? "tab tab--active" : "tab"} onClick={() => setView("entries")}>Time Entries</button>
+            <button className={view === "notes" ? "tab tab--active" : "tab"} onClick={() => setView("notes")}>Notes</button>
+          </nav>
+          {view !== "notes" && <TimeEntriesAdmin canDelete={false} />}
+          {view === "notes" && <NotesList />}
+          {view === "messages" && <Messages me={user} />}
+        </>
+      )}
 
       {(role === "contractor" || role === "staff" || role === "teacher") && <TimeClock />}
 
